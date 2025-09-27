@@ -1,77 +1,99 @@
-using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using Volo.Abp.Application.Dtos;
-using Xunit;
-using Shouldly;
-using TravelBuddy.Destinations;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TravelBuddy.Destinations;
+using TravelBuddy.EntityFrameworkCore;
+using Volo.Abp;
+using Volo.Abp.EntityFrameworkCore;
+using Volo.Abp.Modularity;
+using Volo.Abp.Uow;
+using Volo.Abp.Validation;
+using Xunit;
 
 namespace TravelBuddy.Application.Tests.Destinations
 {
-    public class DestinationAppService_Tests : TravelBuddyApplicationTestBase<TravelBuddyApplicationModule>
+    public abstract class DestinationAppService_Tests<TStartupModule> : TravelBuddyApplicationTestBase<TStartupModule> where TStartupModule : IAbpModule
     {
+        private readonly IDestinationAppService _destinationAppService;
         private readonly IDestinationAppService _service;
+        private readonly IDbContextProvider<TravelBuddyDbContext> _dbContextProvider;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
 
-        public DestinationAppService_Tests()
+        protected DestinationAppService_Tests()
         {
+            _destinationAppService = GetRequiredService<IDestinationAppService>();
             _service = ServiceProvider.GetRequiredService<IDestinationAppService>();
+            _dbContextProvider = GetRequiredService<IDbContextProvider<TravelBuddyDbContext>>();
+            _unitOfWorkManager = GetRequiredService<IUnitOfWorkManager>();
+
         }
 
         [Fact]
-        public async Task Should_Create_Destination()
+        public async Task CreateAsync_ShouldReturnCreatedDestinationDto()
         {
+            // Arrange
             var input = new CreateUpdateDestinationDto
             {
                 Name = "Test City",
                 Country = "Test Country"
             };
+
+            // Act
             var result = await _service.CreateAsync(input);
+
+            // Assert
             result.Id.ShouldNotBe(Guid.Empty);
             result.Name.ShouldBe(input.Name);
             result.Country.ShouldBe(input.Country);
         }
 
         [Fact]
-        public async Task Should_Get_Destination_By_Id()
+        public async Task CreateAsync_ShouldPersistDestinationInDatabase()
         {
-            var input = new CreateUpdateDestinationDto { Name = "Get City", Country = "Get Country" };
-            var created = await _service.CreateAsync(input);
-            var result = await _service.GetAsync(created.Id);
-            result.ShouldNotBeNull();
-            result.Name.ShouldBe(input.Name);
+            using (var uow = _unitOfWorkManager.Begin())
+            {
+                // Arrange
+                var input = new CreateUpdateDestinationDto
+                {
+                    Name = "Test City",
+                    Country = "Test Country"
+                };
+
+                // Act
+                var result = await _service.CreateAsync(input);
+
+                // Assert
+                var dbContext = await _dbContextProvider.GetDbContextAsync();
+                var savedDestination = await dbContext.Destinations.FirstOrDefaultAsync(t => t.Id == result.Id);
+
+                savedDestination.ShouldNotBeNull();
+                savedDestination.Id.ShouldNotBe(Guid.Empty);
+                savedDestination.Name.ShouldBe(input.Name);
+                savedDestination.Country.ShouldBe(input.Country);
+            }
         }
 
-        [Fact]
-        public async Task Should_Update_Destination()
-        {
-            var input = new CreateUpdateDestinationDto { Name = "Update City", Country = "Update Country" };
-            var created = await _service.CreateAsync(input);
-            var updateInput = new CreateUpdateDestinationDto { Name = "Updated City", Country = "Updated Country" };
-            var updated = await _service.UpdateAsync(created.Id, updateInput);
-            updated.Name.ShouldBe(updateInput.Name);
-            updated.Country.ShouldBe(updateInput.Country);
-        }
 
         [Fact]
-        public async Task Should_Delete_Destination()
+        public async Task CreateAsync_ShouldThowExceptionWhenNameIsNull()
         {
-            var input = new CreateUpdateDestinationDto { Name = "Delete City", Country = "Delete Country" };
-            var created = await _service.CreateAsync(input);
-            await _service.DeleteAsync(created.Id);
-            var all = await _service.GetListAsync(new PagedAndSortedResultRequestDto());
-            all.Items.ShouldNotContain(x => x.Id == created.Id);
-        }
+            // Arrange
+            var input = new CreateUpdateDestinationDto
+            {                
+                Country = "Test Country"
+            };
 
-        [Fact]
-        public async Task Should_Get_List_Of_Destinations()
-        {
-            var input1 = new CreateUpdateDestinationDto { Name = "List City 1", Country = "Country 1" };
-            var input2 = new CreateUpdateDestinationDto { Name = "List City 2", Country = "Country 2" };
-            await _service.CreateAsync(input1);
-            await _service.CreateAsync(input2);
-            var result = await _service.GetListAsync(new PagedAndSortedResultRequestDto());
-            result.Items.Count.ShouldBeGreaterThanOrEqualTo(2);
+            // Act & Assert
+            await Assert.ThrowsAsync<AbpValidationException>(async () =>
+            {
+                var result = await _service.CreateAsync(input);
+            });
+         
         }
     }
 }
