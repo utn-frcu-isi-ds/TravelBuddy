@@ -16,6 +16,7 @@ using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Emailing;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity;
+using Volo.Abp.Data;
 
 namespace TravelBuddy;
 
@@ -36,12 +37,11 @@ namespace TravelBuddy;
 public class TravelBuddyDomainModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
-    {
+    {        
         Configure<AbpMultiTenancyOptions>(options =>
         {
             options.IsEnabled = MultiTenancyConsts.IsEnabled;
         });
-
 
 #if DEBUG
         context.Services.Replace(ServiceDescriptor.Singleton<IEmailSender, NullEmailSender>());
