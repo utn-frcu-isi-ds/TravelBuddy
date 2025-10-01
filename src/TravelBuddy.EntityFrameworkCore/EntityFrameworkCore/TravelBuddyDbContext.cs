@@ -12,6 +12,8 @@ using Volo.Abp.Identity.EntityFrameworkCore;
 using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Volo.Abp.OpenIddict.EntityFrameworkCore;
+using TravelBuddy.Destinations;
+using TravelBuddy.Ratings;
 
 namespace TravelBuddy.EntityFrameworkCore;
 
@@ -22,6 +24,8 @@ public class TravelBuddyDbContext :
     IIdentityDbContext
 {
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
+    public DbSet<Destination> Destinations { get; set; }
+    public DbSet<Rating> Ratings { get; set; }
 
 
     #region Entities from the modules
