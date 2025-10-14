@@ -13,7 +13,6 @@ using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using TravelBuddy.Destinations;
-using TravelBuddy.Ratings;
 
 namespace TravelBuddy.EntityFrameworkCore;
 
@@ -25,7 +24,6 @@ public class TravelBuddyDbContext :
 {
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
     public DbSet<Destination> Destinations { get; set; }
-    public DbSet<Rating> Ratings { get; set; }
 
 
     #region Entities from the modules
@@ -73,7 +71,7 @@ public class TravelBuddyDbContext :
         builder.ConfigureIdentity();
         builder.ConfigureOpenIddict();
         builder.ConfigureBlobStoring();
-        
+
         /* Configure your own tables/entities inside here */
 
         //builder.Entity<YourEntity>(b =>
@@ -82,5 +80,12 @@ public class TravelBuddyDbContext :
         //    b.ConfigureByConvention(); //auto configure for the base class props
         //    //...
         //});
+
+        builder.Entity<Destination>(b =>
+        {
+            b.ToTable(TravelBuddyConsts.DbTablePrefix + "Destinations", TravelBuddyConsts.DbSchema);
+            b.ConfigureByConvention(); //auto configure for the base class props
+            //...
+        });
     }
 }
