@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TravelBuddy.CitySearch;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
@@ -17,10 +18,18 @@ namespace TravelBuddy.Destinations
         CreateUpdateDestinationDto>, //Used to create/update a book
         IDestinationAppService //implement the IBookAppService
     {
-        public DestinationAppService(IRepository<Destination, Guid> repository)
+
+        private readonly ICitySearchService _citySearchService;
+
+        public DestinationAppService(IRepository<Destination, Guid> repository, ICitySearchService citySearchService)
             : base(repository)
         {
+            _citySearchService = citySearchService;
+        }      
 
+        public async Task<CitySearchResultDto> SearchCitiesAsync(CitySearchRequestDto request)
+        {
+            return await _citySearchService.SearchCitiesAsync(request);
         }
     }
 }

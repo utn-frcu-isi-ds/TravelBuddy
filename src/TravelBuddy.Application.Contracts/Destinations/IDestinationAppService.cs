@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TravelBuddy.CitySearch;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Validation;
@@ -18,6 +19,7 @@ namespace TravelBuddy.Destinations
                 CreateUpdateDestinationDto> //Used to create/update a book,
             
     {
-
+        Task<CitySearchResultDto> SearchCitiesAsync(CitySearchRequestDto request);
+        
     }
 }

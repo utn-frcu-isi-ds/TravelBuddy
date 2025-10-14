@@ -5,6 +5,9 @@ using Volo.Abp.Identity;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Modularity;
+using Microsoft.Extensions.DependencyInjection;
+using TravelBuddy.CitySearch;
+using TravelBuddy.External.CitySearch;
 
 namespace TravelBuddy;
 
@@ -25,5 +28,8 @@ public class TravelBuddyApplicationModule : AbpModule
         {
             options.AddMaps<TravelBuddyApplicationModule>();
         });
+
+        // Registro de GeoDbCitySearchService como implementación de ICitySearchService
+        context.Services.AddTransient<ICitySearchService, GeoDbCitySearchService>();
     }
 }

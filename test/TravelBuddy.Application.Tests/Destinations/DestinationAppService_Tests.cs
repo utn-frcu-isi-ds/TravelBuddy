@@ -14,23 +14,28 @@ using Volo.Abp.Modularity;
 using Volo.Abp.Uow;
 using Volo.Abp.Validation;
 using Xunit;
+using NSubstitute;
+using TravelBuddy.CitySearch;
+using Volo.Abp.Domain.Repositories;
 
 namespace TravelBuddy.Application.Tests.Destinations
 {
     public abstract class DestinationAppService_Tests<TStartupModule> : TravelBuddyApplicationTestBase<TStartupModule> where TStartupModule : IAbpModule
-    {
-        private readonly IDestinationAppService _destinationAppService;
+    {        
         private readonly IDestinationAppService _service;
+        private readonly ICitySearchService _citySearchService;
+        private readonly IRepository<Destination, Guid> _repository;
         private readonly IDbContextProvider<TravelBuddyDbContext> _dbContextProvider;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
 
         protected DestinationAppService_Tests()
-        {
-            _destinationAppService = GetRequiredService<IDestinationAppService>();
-            _service = ServiceProvider.GetRequiredService<IDestinationAppService>();
+        {         
+            
             _dbContextProvider = GetRequiredService<IDbContextProvider<TravelBuddyDbContext>>();
             _unitOfWorkManager = GetRequiredService<IUnitOfWorkManager>();
-
+            _repository = GetRequiredService<IRepository<Destination, Guid>>();
+            _citySearchService = Substitute.For<ICitySearchService>();
+            _service = GetRequiredService<IDestinationAppService>();
         }
 
         [Fact]
@@ -94,6 +99,83 @@ namespace TravelBuddy.Application.Tests.Destinations
                 var result = await _service.CreateAsync(input);
             });
          
+        }
+
+        [Fact]
+        public async Task SearchCitiesAsync_ReturnsResults()
+        {
+            // Arrange
+            var request = new CitySearchRequestDto { PartialName = "Test" };
+            var expected = new CitySearchResultDto
+            {
+                Cities = new List<CityDto> { new CityDto { Name = "TestCity", Country = "TestCountry", Region = "TestRegion", Id = "1" } }
+            };
+            var repoMock = Substitute.For<IRepository<Destination, Guid>>();
+            var citySearchMock = Substitute.For<ICitySearchService>();
+            citySearchMock.SearchCitiesAsync(request).Returns(expected);
+            var service = new DestinationAppService(repoMock, citySearchMock);
+
+            // Act
+            var result = await service.SearchCitiesAsync(request);
+
+            // Assert
+            result.ShouldNotBeNull();
+            result.Cities.Count.ShouldBe(1);
+            result.Cities[0].Name.ShouldBe("TestCity");
+        }
+
+        [Fact]
+        public async Task SearchCitiesAsync_ReturnsEmpty()
+        {
+            // Arrange
+            var request = new CitySearchRequestDto { PartialName = "NoMatch" };
+            var expected = new CitySearchResultDto { Cities = new List<CityDto>() };
+            var repoMock = Substitute.For<IRepository<Destination, Guid>>();
+            var citySearchMock = Substitute.For<ICitySearchService>();
+            citySearchMock.SearchCitiesAsync(request).Returns(expected);
+            var service = new DestinationAppService(repoMock, citySearchMock);
+
+            // Act
+            var result = await service.SearchCitiesAsync(request);
+
+            // Assert
+            result.ShouldNotBeNull();
+            result.Cities.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task SearchCitiesAsync_InvalidInput_ReturnsEmpty()
+        {
+            // Arrange
+            var request = new CitySearchRequestDto { PartialName = "" };
+            var expected = new CitySearchResultDto { Cities = new List<CityDto>() };
+            var repoMock = Substitute.For<IRepository<Destination, Guid>>();
+            var citySearchMock = Substitute.For<ICitySearchService>();
+            citySearchMock.SearchCitiesAsync(request).Returns(expected);
+            var service = new DestinationAppService(repoMock, citySearchMock);
+
+            // Act
+            var result = await service.SearchCitiesAsync(request);
+
+            // Assert
+            result.ShouldNotBeNull();
+            result.Cities.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task SearchCitiesAsync_ApiError_ThrowsException()
+        {
+            // Arrange
+            var request = new CitySearchRequestDto { PartialName = "Test" };
+            var repoMock = Substitute.For<IRepository<Destination, Guid>>();
+            var citySearchMock = Substitute.For<ICitySearchService>();
+            citySearchMock
+                .When(x => x.SearchCitiesAsync(request))
+                .Do(x => { throw new Exception("API error"); });
+            var service = new DestinationAppService(repoMock, citySearchMock);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(() => service.SearchCitiesAsync(request));
         }
     }
 }
