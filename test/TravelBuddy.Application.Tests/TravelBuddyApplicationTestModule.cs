@@ -1,6 +1,9 @@
 ﻿using TravelBuddy.EntityFrameworkCore;
 using Volo.Abp;
 using Volo.Abp.Modularity;
+using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
+using TravelBuddy.CitySearch;
 
 namespace TravelBuddy;
 
@@ -12,5 +15,10 @@ namespace TravelBuddy;
 )]
 public class TravelBuddyApplicationTestModule : AbpModule
 {
-
+    public override void ConfigureServices(ServiceConfigurationContext context)
+    {
+        // Mock para ICitySearchService para evitar dependencias reales en tests
+        var citySearchServiceMock = Substitute.For<ICitySearchService>();
+        context.Services.AddSingleton(citySearchServiceMock);
+    }
 }

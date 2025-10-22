@@ -1,5 +1,7 @@
 using AutoMapper;
+using TravelBuddy.Application.Contracts.Ratings;
 using TravelBuddy.Destinations;
+using TravelBuddy.Ratings;
 
 namespace TravelBuddy;
 
@@ -13,5 +15,7 @@ public class TravelBuddyApplicationAutoMapperProfile : Profile
 
         CreateMap<Destination, DestinationDto>();
         CreateMap<CreateUpdateDestinationDto, Destination>();
+        CreateMap<Rating, RatingDto>();
+        CreateMap<CreateUpdateRatingDto, Rating>();
     }
 }

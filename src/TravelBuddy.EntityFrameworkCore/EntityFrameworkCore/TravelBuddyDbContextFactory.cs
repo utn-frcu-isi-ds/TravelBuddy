@@ -3,6 +3,8 @@ using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using Volo.Abp.Users;
+using NSubstitute;
 
 namespace TravelBuddy.EntityFrameworkCore;
 
@@ -18,8 +20,12 @@ public class TravelBuddyDbContextFactory : IDesignTimeDbContextFactory<TravelBud
 
         var builder = new DbContextOptionsBuilder<TravelBuddyDbContext>()
             .UseSqlServer(configuration.GetConnectionString("Default"));
+
+        // NSubstitute para ICurrentUser para migraciones y tooling
+        var currentUserSub = Substitute.For<ICurrentUser>();
+        currentUserSub.Id.Returns((Guid?)null);
         
-        return new TravelBuddyDbContext(builder.Options);
+        return new TravelBuddyDbContext(builder.Options, currentUserSub);
     }
 
     private static IConfigurationRoot BuildConfiguration()
