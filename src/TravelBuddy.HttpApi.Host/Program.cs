@@ -40,15 +40,15 @@ public class Program
                         .WriteTo.Async(c => c.AbpStudio(services));
                 });
             await builder.AddApplicationAsync<TravelBuddyHttpApiHostModule>();
-            builder.Services.AddCors(options =>
-            {
-                options.AddDefaultPolicy(builder =>
-                {
-                    builder.WithOrigins("http://localhost:4200")
-                           .AllowAnyHeader()
-                           .AllowAnyMethod();
-                });
-            });
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddDefaultPolicy(builder =>
+            //    {
+            //        builder.WithOrigins("http://localhost:4200")
+            //               .AllowAnyHeader()
+            //               .AllowAnyMethod();
+            //    });
+            //});
             var app = builder.Build();
             await app.InitializeApplicationAsync();
             await app.RunAsync();

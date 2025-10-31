@@ -70,7 +70,7 @@ namespace TravelBuddy.Application.Tests.Destinations
                 };
 
                 // Act
-                var result = await _service.CreateAsync(input);
+                var result = await _service.CreateAsync(input);                
 
                 // Assert
                 var dbContext = await _dbContextProvider.GetDbContextAsync();

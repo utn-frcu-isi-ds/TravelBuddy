@@ -8,9 +8,11 @@ using Volo.Abp.Users;
 using Volo.Abp;
 using System.Threading.Tasks;
 using Volo.Abp.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TravelBuddy.Ratings
 {
+    [Authorize]
     public class RatingAppService : CrudAppService<
         Rating,
         RatingDto,
